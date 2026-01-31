@@ -3,7 +3,7 @@ import contextlib
 from fastapi import FastAPI
 
 from server.mcp_server import create_mcp_server
-from server.middleware import add_cors
+from server.middleware.cors import add_cors
 
 
 def create_app() -> FastAPI:
