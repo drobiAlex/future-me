@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Goal Countdown</title>
+  <style>
+    :root {
+      color: #0b0b0f;
+      font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        sans-serif;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #f6f8fb;
+    }
+
+    main {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+    }
+
+    .goal-title {
+      color: #6c768a;
+      font-size: 0.9rem;
+      margin: 0 0 20px;
+    }
+
+    .countdown {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 20px;
+    }
+
+    .countdown-number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #111bf5;
+      line-height: 1;
+    }
+
+    .countdown-label {
+      font-size: 0.9rem;
+      color: #6c768a;
+      margin-top: 4px;
+    }
+
+    .countdown-complete {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #10b981;
+    }
+
+    .calendar-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-start;
+      padding: 16px 0;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      transition: all 0.2s ease;
+    }
+
+    .dot.passed {
+      background: #111bf5;
+    }
+
+    .dot.today {
+      background: #111bf5;
+      box-shadow: 0 0 0 3px rgba(17, 27, 245, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 3px rgba(17, 27, 245, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 0 6px rgba(17, 27, 245, 0.1);
+      }
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: #6c768a;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.passed {
+      background: #111bf5;
+    }
+
+    .legend-dot.future {
+      background: #e5e7eb;
+    }
+
+    .dates-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #6c768a;
+      margin-top: 8px;
+    }
+
+    form {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #6c768a;
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cad3e0;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+    }
+
+    form button {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      background: #111bf5;
+      color: white;
+      font-weight: 600;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      margin-top: 8px;
+    }
+
+    form button:hover {
+      background: #0d15c4;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6c768a;
+    }
+
+    .empty-state p {
+      margin: 0 0 8px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #111bf5;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <div id="goal-display" style="display: none;">
+      <h2 id="goal-title-display">Goal</h2>
+      <p class="goal-title" id="goal-subtitle"></p>
+
+      <div class="countdown">
+        <div id="countdown-content">
+          <div class="countdown-number" id="days-left">0</div>
+          <div class="countdown-label">days remaining</div>
+        </div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+
+      <div class="calendar-dots" id="dots-container"></div>
+
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot passed"></div>
+          <span>Days passed</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot future"></div>
+          <span>Days remaining</span>
+        </div>
+      </div>
+
+      <div class="dates-info">
+        <span id="start-date"></span>
+        <span id="end-date"></span>
+      </div>
+    </div>
+
+    <div id="empty-state" class="empty-state">
+      <p>No goal set yet</p>
+      <p style="font-size: 0.85rem;">Set a goal below to start tracking</p>
+    </div>
+
+    <form id="goal-form" autocomplete="off">
+      <div class="form-group">
+        <label for="goal-input">Goal name</label>
+        <input id="goal-input" name="title" placeholder="e.g., Launch product" required />
+      </div>
+      <div class="form-group">
+        <label for="start-date-input">Start date</label>
+        <input id="start-date-input" name="startDate" type="date" required />
+      </div>
+      <div class="form-group">
+        <label for="date-input">Target date</label>
+        <input id="date-input" name="targetDate" type="date" required />
+      </div>
+      <button type="submit" id="submit-btn">Set Goal</button>
+    </form>
+  </main>
+
+  <script type="module">
+    const goalDisplay = document.getElementById('goal-display');
+    const emptyState = document.getElementById('empty-state');
+    const formEl = document.getElementById('goal-form');
+    const goalInput = document.getElementById('goal-input');
+    const startDateInput = document.getElementById('start-date-input');
+    const dateInput = document.getElementById('date-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const dotsContainer = document.getElementById('dots-container');
+    const daysLeftEl = document.getElementById('days-left');
+    const countdownContent = document.getElementById('countdown-content');
+    const goalTitleDisplay = document.getElementById('goal-title-display');
+    const goalSubtitle = document.getElementById('goal-subtitle');
+    const startDateEl = document.getElementById('start-date');
+    const endDateEl = document.getElementById('end-date');
+    const progressFill = document.getElementById('progress-fill');
+
+    // Set default start date to today
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    startDateInput.value = todayStr;
+
+    let goal = window.openai?.toolOutput?.goal ?? null;
+
+    const formatDate = (dateStr) => {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const getDaysBetween = (start, end) => {
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const diffTime = endDate - startDate;
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    const render = () => {
+      if (!goal) {
+        goalDisplay.style.display = 'none';
+        emptyState.style.display = 'block';
+        submitBtn.textContent = 'Set Goal';
+        goalInput.value = '';
+        startDateInput.value = todayStr;
+        dateInput.value = '';
+        return;
+      }
+
+      goalDisplay.style.display = 'block';
+      emptyState.style.display = 'none';
+      submitBtn.textContent = 'Update Goal';
+      goalInput.value = goal.title;
+      startDateInput.value = goal.startDate;
+      dateInput.value = goal.targetDate;
+
+      goalTitleDisplay.textContent = goal.title;
+
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0);
+
+      const startDate = new Date(goal.startDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      const targetDate = new Date(goal.targetDate);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const totalDays = getDaysBetween(goal.startDate, goal.targetDate);
+      const daysPassed = getDaysBetween(goal.startDate, todayDate.toISOString().split('T')[0]);
+      const daysRemaining = getDaysBetween(todayDate.toISOString().split('T')[0], goal.targetDate);
+
+      goalSubtitle.textContent = `${totalDays} day journey`;
+      startDateEl.textContent = `Started: ${formatDate(goal.startDate)}`;
+      endDateEl.textContent = `Target: ${formatDate(goal.targetDate)}`;
+
+      // Update countdown
+      if (daysRemaining <= 0) {
+        countdownContent.innerHTML = '<div class="countdown-complete">Goal reached!</div>';
+      } else if (daysRemaining === 1) {
+        daysLeftEl.textContent = '1';
+        countdownContent.querySelector('.countdown-label').textContent = 'day remaining';
+      } else {
+        daysLeftEl.textContent = daysRemaining;
+        countdownContent.querySelector('.countdown-label').textContent = 'days remaining';
+      }
+
+      // Update progress bar
+      const progress = Math.min(100, Math.max(0, (daysPassed / totalDays) * 100));
+      progressFill.style.width = `${progress}%`;
+
+      // Render dots
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i <= totalDays; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+
+        if (i < daysPassed) {
+          dot.classList.add('passed');
+        } else if (i === daysPassed && daysRemaining > 0) {
+          dot.classList.add('today');
+        }
+
+        // Add tooltip
+        const dotDate = new Date(startDate);
+        dotDate.setDate(dotDate.getDate() + i);
+        dot.title = formatDate(dotDate.toISOString());
+
+        dotsContainer.appendChild(dot);
+      }
+    };
+
+    const updateFromResponse = (response) => {
+      if (response?.structuredContent?.goal !== undefined) {
+        goal = response.structuredContent.goal;
+        render();
+      }
+    };
+
+    const handleSetGlobals = (event) => {
+      const globals = event.detail?.globals;
+      if (globals?.toolOutput?.goal !== undefined) {
+        goal = globals.toolOutput.goal;
+        render();
+      }
+    };
+
+    window.addEventListener('openai:set_globals', handleSetGlobals, {
+      passive: true,
+    });
+
+    const mutateGoalLocally = (name, payload) => {
+      if (name === 'set_goal') {
+        goal = {
+          id: crypto.randomUUID(),
+          title: payload.title,
+          startDate: payload.startDate || todayStr,
+          targetDate: payload.targetDate,
+        };
+      }
+
+      if (name === 'clear_goal') {
+        goal = null;
+      }
+
+      render();
+    };
+
+    const callGoalTool = async (name, payload) => {
+      if (window.openai?.callTool) {
+        const response = await window.openai.callTool(name, payload);
+        updateFromResponse(response);
+        return;
+      }
+
+      mutateGoalLocally(name, payload);
+    };
+
+    formEl.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const title = goalInput.value.trim();
+      const startDate = startDateInput.value;
+      const targetDate = dateInput.value;
+      if (!title || !startDate || !targetDate) return;
+      await callGoalTool('set_goal', { title, startDate, targetDate });
+    });
+
+    // Live update every minute
+    setInterval(() => {
+      if (goal) render();
+    }, 60000);
+
+    render();
+  </script>
+</body>
+
+</html>
