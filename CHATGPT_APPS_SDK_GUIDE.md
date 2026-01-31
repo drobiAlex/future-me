@@ -258,7 +258,7 @@ def _widget_meta():
         "openai/outputTemplate": TEMPLATE_URI,          # Links to HTML resource
         "openai/toolInvocation/invoking": "Loading...",  # Status while running
         "openai/toolInvocation/invoked": "Widget ready", # Status when done
-        "openai/widgetAccessible": True,                 # Widget can call tools
+        "openai/widgetAccessible": True,                 # REQUIRED for widget to render!
     }
 
 
@@ -767,7 +767,38 @@ def load_widget_html():
 
 The MCP sub-app is a Starlette mount at `/`. If mounted before other routes, it will shadow them.
 
-### 10. Debug mode toggle
+### 10. `openai/widgetAccessible: True` is REQUIRED for widget rendering
+
+Without this metadata flag, ChatGPT will **not render your widget** — it will only show the text response. This is the most common cause of "widget not appearing" issues.
+
+```python
+def _widget_meta():
+    return {
+        "openai/outputTemplate": TEMPLATE_URI,
+        "openai/toolInvocation/invoking": "Loading...",
+        "openai/toolInvocation/invoked": "Ready",
+        "openai/widgetAccessible": True,  # <-- REQUIRED! Widget won't render without this
+    }
+```
+
+The flag must be present in:
+1. **Tool registration** — `@mcp.tool(meta=_widget_meta())`
+2. **Tool result** — `CallToolResult(..., _meta=_widget_meta())`
+
+Despite the name suggesting it only enables `window.openai.callTool()`, this flag is actually required for any widget to display.
+
+### 11. Chrome 142+ local network access flag
+
+If you're using Chrome version 142+ and your widget doesn't appear when testing with a local server (even via ngrok), you may need to disable the local-network-access flag:
+
+1. Go to `chrome://flags/`
+2. Find `#local-network-access-check`
+3. Set it to **Disabled**
+4. **Restart Chrome** (required for the change to take effect)
+
+This is mentioned in the [official OpenAI Apps SDK examples README](https://github.com/openai/openai-apps-sdk-examples).
+
+### 12. Debug mode toggle
 
 Keep a `DEBUG_MODE` flag in your resource module. When `True`, serve a trivial inline HTML that dumps `window.openai.toolOutput` — useful for verifying the pipeline works before debugging React issues.
 
@@ -835,7 +866,7 @@ def _build_debug_html():
 | `openai/outputTemplate` | `string` | URI of the widget HTML resource (e.g. `ui://widget/main.html`) |
 | `openai/toolInvocation/invoking` | `string` | Status text shown while tool is running |
 | `openai/toolInvocation/invoked` | `string` | Status text shown when tool completes |
-| `openai/widgetAccessible` | `boolean` | Whether widget can call tools via `window.openai.callTool` |
+| `openai/widgetAccessible` | `boolean` | **REQUIRED for widget to render.** Also enables `window.openai.callTool()` |
 
 ### MCP Resource Fields
 
